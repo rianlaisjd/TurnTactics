@@ -1,49 +1,365 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#152b34"><meta name="color-scheme" content="light"><title>Turn Tactics · The field</title><link rel="manifest" href="./online.webmanifest"><link rel="apple-touch-icon" href="./icons/icon-180.png"><link rel="stylesheet" href="./tactics-ui.css?v=0.8.0"></head>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#efe6d2">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Turn Tactics">
+<meta name="referrer" content="no-referrer">
+<title>Turn Tactics</title>
+<link rel="manifest" href="./online.webmanifest">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/icon-180.png">
+<script src="./theme.js?v=1.0.0"></script>
+<link rel="stylesheet" href="./tactics-ui.css?v=1.0.0">
+</head>
 <body>
-<a class="skip" href="#main">Skip to game</a>
-<header class="topbar"><a class="wordmark" href="./online.html" aria-label="Turn Tactics home"><span class="brand-mark" aria-hidden="true">T<span>T</span></span><span>TURN<br>TACTICS</span></a><div class="edition">SOCIAL STRATEGY<br><span>PRIVATE ALPHA / 0.8.0</span></div><button id="roomBadge" class="room-badge" hidden title="Copy the shareable room code"></button><span id="connectionDot" class="connection">OFFLINE</span></header>
-<main id="main">
-<section id="welcome" class="welcome">
-<div class="welcome-story"><p class="eyebrow">SAME FIELD. DIFFERENT AGENDAS.</p><h1>Every point<br>is a promise.</h1><p class="lead">Move carefully. Choose your allies.<br>Decide what your word is worth.</p><div class="intro-grid" aria-hidden="true"><span></span><span></span><span class="map-token">01</span><span></span><span></span><span class="line-cell"></span><span></span><span></span><span></span><span class="map-token ghost">02</span><span></span><span></span></div><p class="story-foot">A small board. A long memory.</p></div>
-<div class="entry-card"><p class="eyebrow">TAKE YOUR PLACE</p><h2>The room is waiting.</h2><p id="connectHint">Your identity belongs to this browser. Save a private recovery code once you are inside.</p><button id="connect" class="primary wide">Connect this browser <span aria-hidden="true">↗</span></button><div id="entryForms" hidden><form id="joinForm"><label for="code">Room code</label><input id="code" maxlength="12" required autocomplete="off" placeholder="Your friend’s 12-character code"><label for="name">Your name</label><input id="name" maxlength="24" required autocomplete="nickname" placeholder="What should the room call you?"><button class="primary wide" type="submit">Join as a player <span aria-hidden="true">→</span></button></form><div class="entry-divider">OR TAKE THE REFEREE’S CHAIR</div><button id="create" class="wide">Create a host room</button><details class="restore"><summary>Already have a private recovery code?</summary><form id="recoverForm"><label for="recoverRoom">Original room code</label><input id="recoverRoom" required maxlength="12" autocomplete="off"><label for="recoverToken">Private recovery code</label><input id="recoverToken" required type="password" autocomplete="off" spellcheck="false" maxlength="100"><p class="hint">Restoring transfers control away from the previous browser. Never share this code.</p><button class="wide" type="submit">Restore my role</button></form></details></div><p id="entryFeedback" class="feedback" role="status" aria-live="polite"></p></div>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <button id="menuButton" class="icon-button" aria-controls="menu" aria-expanded="false" aria-label="Open menu"><span data-icon="menu"></span></button>
+  <a class="wordmark" href="./online.html" aria-label="Turn Tactics home"><span class="brand-mark" aria-hidden="true">TT</span><span>Turn Tactics</span></a>
+  <button id="roomBadge" class="room-badge" hidden title="Copy the invitation code"></button>
+  <span id="connection" class="connection" role="status">Offline</span>
+</header>
+
+<nav id="menu" class="menu" aria-label="Sections">
+  <div class="menu-head"><strong>Menu</strong><button id="menuClose" class="icon-button" aria-label="Close menu"><span data-icon="close"></span></button></div>
+  <button data-view="field"><span data-icon="field"></span><span>Field</span></button>
+  <button data-view="chat" id="chatNav"><span data-icon="chat"></span><span>Chat</span><b id="chatBadge" class="count" hidden></b></button>
+  <button data-view="council"><span data-icon="council"></span><span>Rules &amp; Council</span></button>
+  <button data-view="players"><span data-icon="players"></span><span>Players</span></button>
+  <button data-view="dispatch"><span data-icon="dispatch"></span><span>Official Dispatch</span></button>
+  <button data-view="settings"><span data-icon="settings"></span><span>Settings</span></button>
+  <button data-view="desk" id="deskNav" hidden><span data-icon="desk"></span><span>Host desk</span></button>
+  <p id="menuAccount" class="menu-foot hint"></p>
+</nav>
+<div id="menuScrim" class="scrim" hidden></div>
+
+<main id="main" tabindex="-1">
+<div id="offlineBanner" class="banner warn" hidden>You are offline. Nothing here is live, and no action can be sent until you reconnect.</div>
+
+<!-- HOME: account, invitation, hosting -->
+<section id="view-home" class="view">
+  <div class="home">
+    <div class="home-story">
+      <p class="eyebrow">A social strategy game for friends</p>
+      <h1>Every point<br>is a promise.</h1>
+      <p class="lead">Move carefully. Choose your allies. Decide what your word is worth.</p>
+    </div>
+    <div class="card" id="homeCard">
+      <p id="homeFeedback" class="feedback" role="status" aria-live="polite"></p>
+
+      <div id="authPanel" hidden>
+        <div class="tabs" role="tablist" aria-label="Account">
+          <button role="tab" id="tabSignIn" aria-controls="signInForm" aria-selected="true">Sign in</button>
+          <button role="tab" id="tabRegister" aria-controls="registerForm" aria-selected="false">Create account</button>
+        </div>
+        <form id="signInForm" role="tabpanel" aria-labelledby="tabSignIn">
+          <label for="signInId">Username or email</label>
+          <input id="signInId" required autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="254">
+          <label for="signInPassword">Password</label>
+          <input id="signInPassword" type="password" required autocomplete="current-password" maxlength="200">
+          <div id="carryWrap" class="notice" hidden>
+            <label class="check"><input type="checkbox" id="carrySeat" checked> <span>Bring my role in room <strong id="carryRoom"></strong> into this account</span></label>
+            <p class="hint">Signing in replaces this browser’s guest identity. A role you do not carry over can only be restored later with its private recovery code. Carrying over replaces that role’s existing recovery code.</p>
+          </div>
+          <button class="primary wide" type="submit">Sign in</button>
+          <button type="button" id="showReset" class="text-button">Forgot your password?</button>
+        </form>
+        <form id="registerForm" role="tabpanel" aria-labelledby="tabRegister" hidden>
+          <p id="guestUpgradeNote" class="notice" hidden>This browser holds a guest identity from an earlier version. Creating the account here keeps its seats, images, proposals and messages.</p>
+          <label for="regEmail">Email <span class="hint">· for confirmation and password recovery</span></label>
+          <input id="regEmail" type="email" required autocomplete="email" maxlength="254">
+          <label for="regUsername">Username <span class="hint">· 3–20 letters, numbers, underscores</span></label>
+          <input id="regUsername" required autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[A-Za-z0-9_]{3,20}" maxlength="20">
+          <label for="regDisplay">Display name <span class="hint">· what rooms call you by default</span></label>
+          <input id="regDisplay" required autocomplete="nickname" maxlength="24">
+          <label for="regPassword">Password <span class="hint">· at least 8 characters</span></label>
+          <input id="regPassword" type="password" required autocomplete="new-password" minlength="8" maxlength="200">
+          <button class="primary wide" type="submit">Create account</button>
+        </form>
+        <form id="resetForm" hidden>
+          <h2>Reset your password</h2>
+          <label for="resetEmail">Account email</label>
+          <input id="resetEmail" type="email" required autocomplete="email" maxlength="254">
+          <button class="primary wide" type="submit">Email me a reset link</button>
+          <button type="button" id="cancelReset" class="text-button">Back to sign in</button>
+        </form>
+      </div>
+
+      <form id="newPasswordForm" hidden>
+        <h2>Choose a new password</h2>
+        <label for="newPassword">New password <span class="hint">· at least 8 characters</span></label>
+        <input id="newPassword" type="password" required autocomplete="new-password" minlength="8" maxlength="200">
+        <button class="primary wide" type="submit">Save password</button>
+      </form>
+
+      <form id="profileForm" hidden>
+        <h2>Finish your account</h2>
+        <p class="hint">Your username signs you in. Your display name is what other players see unless you pick a room-specific name.</p>
+        <label for="profileUsername">Username</label>
+        <input id="profileUsername" required autocapitalize="none" spellcheck="false" pattern="[A-Za-z0-9_]{3,20}" maxlength="20">
+        <label for="profileDisplay">Display name</label>
+        <input id="profileDisplay" required maxlength="24">
+        <div id="profilePasswordWrap" hidden>
+          <label for="profilePassword">Password <span class="hint">· at least 8 characters</span></label>
+          <input id="profilePassword" type="password" autocomplete="new-password" minlength="8" maxlength="200">
+        </div>
+        <button class="primary wide" type="submit">Save</button>
+      </form>
+
+      <div id="entryPanel" hidden>
+        <p class="eyebrow">Signed in as <strong id="whoAmI"></strong></p>
+        <form id="joinForm">
+          <label for="joinCode">Invitation code</label>
+          <input id="joinCode" class="code-input" required autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="14" placeholder="6 characters">
+          <details><summary>Use a different name in this room</summary>
+            <label for="joinName">Room name <span class="hint">· optional</span></label>
+            <input id="joinName" maxlength="24" autocomplete="off">
+          </details>
+          <button class="primary wide" type="submit">Join as a player</button>
+        </form>
+        <div id="recentRooms" hidden><p class="eyebrow">Your rooms on this device</p><div id="recentList" class="recent"></div></div>
+        <p class="divider">or take the referee’s chair</p>
+        <button id="createRoom" class="wide">Host a new room</button>
+        <details><summary>Restore a role with a private recovery code</summary>
+          <form id="recoverForm">
+            <label for="recoverRoom">Room invitation or original room code</label>
+            <input id="recoverRoom" required maxlength="14" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <label for="recoverToken">Private recovery code</label>
+            <input id="recoverToken" required type="password" autocomplete="off" spellcheck="false" maxlength="100">
+            <p class="hint">Restoring moves the role to this account. The previous identity loses control of it.</p>
+            <button class="wide" type="submit">Restore my role</button>
+          </form>
+        </details>
+      </div>
+      <div id="guestPanel" class="notice" hidden>
+        <p><strong>Guest identity found.</strong> This browser has seats from an earlier version. They still work in their existing rooms. Hosting or joining a new game needs an account.</p>
+        <div id="guestRooms" class="recent"></div>
+      </div>
+    </div>
+  </div>
 </section>
-<section id="game" hidden>
-<div class="match-heading"><div><p id="fieldLabel" class="eyebrow">THE FIELD</p><h1 id="matchTitle">Trust is not a resource.</h1></div><div class="phase-box"><span id="phaseLabel"></span><p id="clockLabel"></p></div></div>
-<div id="testBanner" class="test-banner" hidden>TEST FIELD · Placeholder seats do not act. This is not a competitive match.</div>
-<div id="staleBanner" class="warning" hidden>Connection lost. The field may be out of date. Actions are paused until a fresh server response. <button id="refresh">Try reconnecting</button></div>
-<div id="winnerBanner" class="winner" hidden><span class="eyebrow">THE FIELD HAS SPOKEN</span><h2 id="winnerNames"></h2><p id="winnerCaption"></p></div>
-<div id="resources" class="resources"></div>
-<nav id="navigation" class="navigation" aria-label="Game sections"><button data-view="field" class="active"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg></span> Field</button><button data-view="chat" id="chatNav"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11a8 8 0 0 1-8 8H7l-4 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/><path d="M7 8h10M7 12h7"/></svg></span><span class="chat-nav-label">Chat <b id="chatBadge" class="unread-count" hidden></b></span></button><button data-view="dispatch"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span> Dispatch</button><button data-view="council"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 10 10-10 10L2 12Z"/><path d="M8 12h8"/></svg></span> Council</button><button data-view="players"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span> Players</button><button data-view="settings"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2" fill="currentColor"/><circle cx="16" cy="12" r="2" fill="currentColor"/><circle cx="10" cy="18" r="2" fill="currentColor"/></svg></span> Settings</button><button data-view="desk" id="deskTab" aria-label="Host desk" hidden><span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V3h8v4M3 13h18"/></svg></span> Desk</button><button id="moreNavigation" class="more-navigation" aria-haspopup="dialog"><span aria-hidden="true">•••</span> More</button></nav><dialog id="sectionMenu" aria-labelledby="sectionMenuTitle"><div class="menu-heading"><h2 id="sectionMenuTitle">More</h2><button id="closeSectionMenu" aria-label="Close more sections">Close</button></div><button data-view="dispatch">Official Dispatch</button><button data-view="settings">Settings &amp; recovery</button><button data-view="desk" id="deskMenu" hidden>Host desk</button></dialog>
-<section id="view-field" class="view">
-<div id="lobby" class="lobby-layout" hidden><article class="surface lobby-brief"><p class="eyebrow">BEFORE THE FIRST MOVE</p><h2>Get everyone<br>to the table.</h2><p>Share the room code. Choose an image. Once the host schedules the game, the field is locked in.</p><div class="invite-strip"><span id="lobbyCode" class="mono"></span><button id="copyLobby">Copy invite code</button></div><p id="lobbyCount" class="hint"></p><div id="lobbyPeople" class="lobby-people"></div><p id="lobbyNext" class="hint"></p><button id="lobbyCustomize">Choose your player image →</button><button id="lobbyHost" class="primary" hidden>Open the host desk →</button></article><aside class="field-note"><p class="eyebrow">THE UNWRITTEN PART</p><h3>You can share a point.<br>You cannot buy trust.</h3><p>There is no alliance button. Make your agreements with your friends. The board only keeps score.</p><div class="rules-short"><p><b>3 hearts</b> to begin.</p><p><b>1 point</b> at opening, then daily.</p><p><b>Your resources</b> stay private from other players.</p></div></aside></div>
-<div id="battle" class="battle-layout"><article class="map-panel"><div class="section-heading"><div><p class="eyebrow">COMMON GROUND</p><h2>The field</h2></div><div class="map-tools"><button id="zoomOut" aria-label="Smaller map tiles">−</button><button id="centerMe" aria-label="Center on your player">◎</button><button id="zoomIn" aria-label="Larger map tiles">+</button></div></div><div id="boardViewport" class="board-viewport" tabindex="0" aria-label="Scrollable game board"><div id="board" class="board" role="group" aria-label="Game board"></div></div><div class="map-legend"><span><i class="key own"></i> You</span><span><i class="key range"></i> In your range</span><span><i class="key chosen"></i> Selected</span></div><p id="mapHint" class="hint">Select a token to inspect it. Select an adjacent empty square to move.</p></article>
-<aside class="inspector"><div class="inspector-top"><p class="eyebrow" id="selectionLabel">YOUR NEXT DECISION</p><h2 id="selectionTitle">Read the field.</h2><p id="selectionBody"></p></div><div id="selectionDetails" class="selection-details"></div><button id="messageSelected" class="wide" hidden>Message this player</button><div id="actionList" class="action-list"></div><p id="actionFeedback" class="feedback" role="status" aria-live="polite"></p><div class="private-note"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><p id="privateNote">Other players’ resources are private. Absence of a shield marker does not prove a player is unshielded.</p></div><div class="last-dispatch"><p class="eyebrow">LATEST DISPATCH</p><p id="latestDispatch"></p><button id="readDispatch" class="text-button">Read the dispatch →</button></div></aside></div>
+
+<!-- FIELD -->
+<section id="view-field" class="view" hidden>
+  <div class="status-strip"><strong id="phaseLabel"></strong><span id="clockLabel"></span><button id="refresh" class="text-button">Refresh</button></div>
+  <div id="testBanner" class="banner test" hidden>Test room · placeholder seats do not act · not a competitive match</div>
+  <div id="staleBanner" class="banner warn" hidden>Connection lost. The field may be out of date; actions are paused until the server answers.</div>
+  <div id="winnerBanner" class="banner win" hidden><span class="eyebrow">The field has spoken</span><h2 id="winnerNames"></h2><p id="winnerCaption"></p></div>
+
+  <div id="lobby" class="card" hidden>
+    <p class="eyebrow">Before the first move</p>
+    <h2>Get everyone to the table.</h2>
+    <div class="invite"><span id="lobbyCode" class="invite-code" aria-label="Invitation code"></span><button id="copyInvite">Copy code</button><button id="copyLink">Copy invite link</button></div>
+    <p id="lobbyCount" class="hint"></p>
+    <div id="lobbyPeople" class="people"></div>
+    <p id="lobbyNext"></p>
+    <button id="lobbyAction" class="primary"></button>
+  </div>
+
+  <div id="battle" hidden>
+    <div id="resources" class="resources" aria-label="Your resources"></div>
+    <div class="field-layout">
+      <div class="board-panel">
+        <div class="board-tools">
+          <span id="selectedSquare" class="square-chip" aria-live="polite"></span>
+          <button id="zoomOut" class="icon-button" aria-label="Smaller squares">−</button>
+          <button id="zoomIn" class="icon-button" aria-label="Larger squares">+</button>
+          <button id="findMe">Find me</button>
+        </div>
+        <div id="boardViewport" class="board-viewport"><div id="board" class="board" role="group" aria-label="Game board. Arrow keys move between squares."></div></div>
+        <details class="legend"><summary>Board key</summary>
+          <p><span class="key key-self"></span> Your token is ringed and tagged “you”. <span class="key key-range"></span> A corner dot marks squares within your targeting range. <span class="key key-move"></span> A dashed border marks squares you can move to. <span class="key key-chosen"></span> A double outline marks your selection. An absent shield marker never proves another player is unshielded.</p>
+        </details>
+      </div>
+      <aside class="inspector" aria-label="Selection and actions">
+        <p class="eyebrow" id="selectionLabel"></p>
+        <h2 id="selectionTitle"></h2>
+        <p id="selectionBody"></p>
+        <div id="selectionDetails"></div>
+        <div id="actionList" class="actions"></div>
+        <button id="messageSelected" hidden>Message this player</button>
+        <p id="actionFeedback" class="feedback" role="status" aria-live="polite"></p>
+        <button id="latestDispatch" class="dispatch-peek" title="Open the Official Dispatch"></button>
+      </aside>
+    </div>
+  </div>
 </section>
+
+<!-- CHAT -->
 <section id="view-chat" class="view" hidden>
-<div class="page-title chat-title"><p class="eyebrow">WORDS HAVE CONSEQUENCES</p><h2>Make your case.</h2><p>Promises belong here. Confirmed game events stay in Dispatch.</p></div>
-<div class="chat-layout">
-<aside class="chat-conversations" aria-label="Conversations"><h3>Conversations</h3><div id="chatThreads"></div><p class="hint">Chat stays open after the action cutoff and after elimination.</p></aside>
-<div class="chat-main">
-<div class="chat-mobile-picker"><label for="chatThreadSelect">Conversation</label><select id="chatThreadSelect" aria-label="Conversation"><option value="room">Room chat</option></select></div>
-<header class="chat-thread-heading"><div><p class="eyebrow" id="chatVisibility">PUBLIC TO THIS ROOM</p><h3 id="chatThreadTitle">Room chat</h3></div><span id="chatConnection" class="hint" role="status">Connecting…</span></header>
-<p class="chat-privacy" id="chatPrivacy">Everyone in this room, including the host and eliminated players, can read room chat.</p>
-<button id="chatOlder" class="text-button" hidden>Load older messages</button>
-<ol id="chatMessages" class="chat-messages" aria-label="Messages" tabindex="0"></ol>
-<button id="chatNew" class="text-button" hidden>New messages below ↓</button>
-<form id="chatForm" class="chat-composer"><label for="chatBody">Your message</label><textarea id="chatBody" maxlength="1000" rows="2" placeholder="What is your word worth?" required></textarea><div class="chat-compose-actions"><span id="chatCount" class="hint">0 / 1000</span><button id="chatSend" class="primary" type="submit">Send message</button></div></form>
-<div class="chat-delivery"><p id="chatFeedback" class="feedback" role="status" aria-live="polite"></p><button id="chatRetry" hidden>Retry the same message safely</button><button id="chatReconnect" class="text-button" hidden>Reconnect chat</button></div>
-<details class="chat-details"><summary>Chat privacy &amp; limits</summary><p class="chat-security hint">DMs are participant-only in the app, not end-to-end encrypted. Database administrators can access stored messages. Text only; sent messages cannot be edited or withdrawn. Maximum 1000 characters, one message per second and 20 per minute across your conversations.</p></details>
-</div></div></section>
-<section id="view-dispatch" class="view" hidden><div class="page-title"><p class="eyebrow">WHAT THE ROOM CAN KNOW</p><h2>The dispatch.</h2><p>Public movement and announcements. Private attacks and resource changes are not a public activity feed.</p></div><ol id="dispatchList" class="dispatch-list"></ol></section>
-<section id="view-council" class="view" hidden><div class="page-title"><p class="eyebrow">CHANGE THE TERMS</p><h2>The council.</h2><p>Propose carefully. <span id="proposalPrice">5</span> points are charged only if the host approves. Pending points are not reserved.</p></div><div class="council-layout"><article class="surface"><p class="eyebrow">THE CURRENT AGREEMENT</p><h3 id="currentGoal"></h3><div id="approvedRules"></div></article><article class="surface"><div id="proposalFormWrap"><h3>Put it to the room.</h3><p class="hint">Only you and the host can see a pending or rejected proposal.</p><form id="proposalForm"><label for="proposalKind">What changes?</label><select id="proposalKind"><option value="house_rule">A written house rule · host enforced</option><option value="all_hearts">Every survivor gains one heart · automatic</option><option value="last_survivors">Last N survivors win · automatic</option></select><div id="survivorField" hidden><label for="survivorCount">Survivor target</label><input id="survivorCount" type="number" min="1" max="20" value="4"></div><p id="effectHint" class="hint"></p><label for="proposalTitle">Give it a title</label><input id="proposalTitle" maxlength="80" required placeholder="Make the intention clear"><label for="proposalBody">The proposal</label><textarea id="proposalBody" rows="4" maxlength="1000" required placeholder="Explain the change and why it belongs in this game."></textarea><button id="submitProposal" class="primary wide" type="submit">Send to the host · no charge yet</button><p id="proposalReason" class="hint"></p></form></div><p id="proposalFeedback" class="feedback" role="status" aria-live="polite"></p><h3 id="proposalHeading">Your proposals</h3><div id="proposalList"></div></article></div></section>
-<section id="view-players" class="view" hidden><div class="page-title"><p class="eyebrow">FRIENDS. FOR NOW.</p><h2>The room.</h2><p id="playersPrivacy">Positions are public. Other players’ resources are not.</p></div><div id="playerList" class="player-list"></div></section>
-<section id="view-settings" class="view" hidden><div class="page-title"><p class="eyebrow">OFF THE FIELD</p><h2>Your corner.</h2><p>Identity, recovery, and the rules. None of this needs to sit between you and your next move.</p></div><div class="settings-layout"><article class="surface" id="iconPanel"><p class="eyebrow">YOUR MARK</p><h3>A face on the field.</h3><p id="iconStatus"></p><div id="iconPicker"><label for="iconFile">PNG or JPG · up to 5 MB</label><input id="iconFile" type="file" accept="image/png,image/jpeg"><div id="iconPreviewBox" class="icon-preview" hidden><img id="iconPreview" width="96" height="96" alt="Your selected image preview"><button id="saveIcon" class="primary">Lock this image for the game</button></div></div><p id="iconFeedback" class="feedback" role="status" aria-live="polite"></p></article><article class="surface" id="recoveryPanel"><p class="eyebrow">KEEP YOUR SEAT</p><h3>Protect your access.</h3><p>Save a private recovery code for <strong id="recoveryRole"></strong>, with this room’s code. Anyone holding both can take over your role.</p><button id="makeRecovery">Create / replace my recovery code</button><div id="recoveryOutput" hidden><label for="privateRecovery">Private code · save it before leaving</label><textarea id="privateRecovery" readonly rows="3" autocomplete="off" spellcheck="false"></textarea><div class="button-row"><button id="copyRecovery">Copy room + private code</button><button id="hideRecovery">Hide code</button></div><p class="hint">Never put this code in game chat, screenshots, GitHub, or messages to the assistant. A replacement invalidates the older code.</p></div><p id="recoveryFeedback" class="feedback" role="status" aria-live="polite"></p></article><article class="surface rules-reference"><p class="eyebrow">THE GROUND RULES</p><h3>Small rules. Real consequences.</h3><dl><div><dt>Move · 1 point</dt><dd>One empty orthogonal square. No diagonals. Occupied squares block movement.</dd></div><div><dt>Attack / give · 1 point</dt><dd>Starting Manhattan range: <span id="rulesRange">3</span>. Within range, an unshielded attack removes one heart; giving transfers one point.</dd></div><div><dt>Shield · 2 points</dt><dd>Protects until midnight; buying it again while shielded is unavailable.</dd></div><div><dt>Range · 2 points</dt><dd>Increases your range by one for the rest of this game.</dd></div><div><dt>Pacific time</dt><dd>Normal games open at the next midnight. Daily income arrives at midnight. Actions close at <span id="rulesCutoff">6</span> pm. Unspent points accumulate.</dd></div><div><dt>Eliminated players</dt><dd><span id="rulesElimination">All remaining points are lost on elimination.</span> Can vote for a living player. A strict majority of ballots cast awards one point at midnight. No majority means no bonus.</dd></div><div><dt>Add Change · <span id="rulesCost">5</span> points</dt><dd>Host approval required. Payment is on approval; rejected proposals cost nothing. In slideshow rooms, approved changes and their proposers are public. Legacy rooms keep their previous publication rules.</dd></div><div><dt>Slideshow board schedule</dt><dd>5 players: 8 × 8; 7: 9 × 9; 8–9: 10 × 10; 10: 11 × 11; 11–12: 12 × 12; 13–14: 13 × 13; 15–16: 14 × 14; 17–20: 15 × 15. Six players are not specified. Legacy rooms retain their original board.</dd></div><div><dt>Explicit declarations</dt><dd>Use the confirmation panel to declare your action. Only a server-accepted action changes the game. A rejected or interrupted request is not an undeclared action and does not forfeit points.</dd></div><div><dt>Referee visibility</dt><dd>The host sees every resource and a private action log, but must not reveal private stats or actions. Players may choose to reveal their own information.</dd></div></dl></article><article class="surface"><p class="eyebrow">LAST RESORT</p><h3>Leave the field.</h3><button id="switchRoom">Return to room entry · keep my seat</button><p class="hint">This does not withdraw you or delete the room. Use the original room code to return.</p><p>Withdrawal is permanent for this game. You can still vote after elimination.</p><button id="withdraw" class="danger-outline">Withdraw from the game · 0 points</button><p id="withdrawReason" class="hint"></p></article></div></section>
-<section id="view-desk" class="view" hidden><div class="page-title"><p class="eyebrow">THE REFEREE’S CHAIR</p><h2>Keep the game moving.</h2><p>You are not a player. Your resource visibility and action log are private to this role.</p></div><div class="settings-layout"><article class="surface"><h3>Room controls</h3><div id="startControls"><label for="boardSize">Board side length</label><input id="boardSize" type="number" min="3" max="24" value="4"><button id="start" class="primary wide">Schedule next Pacific midnight</button><p id="startReason" class="hint"></p><button id="fillTest">Fill missing seats for a test</button><p class="hint">Permanent test label. At least one real player must join first. Placeholders cannot act or vote.</p></div><div id="manualControls" hidden><p>This is a test room. These controls do not exist in normal timed games.</p><div class="button-row"><button id="closeDay">Close actions</button><button id="nextDay">Advance test day</button></div></div><p id="deskStatus" class="hint"></p><button id="openCouncil">Review rule proposals →</button><p id="deskFeedback" class="feedback" role="status" aria-live="polite"></p></article><article class="surface"><h3>Private action log</h3><p class="hint">Not visible to players.</p><ol id="hostLog" class="audit-list"></ol></article></div></section>
-<div class="sync-footer"><span id="sync">Waiting for the server.</span><span id="goalFooter"></span></div>
+  <div class="chat-layout">
+    <aside class="chat-threads" aria-label="Conversations"><div id="chatThreads"></div></aside>
+    <div class="chat-main">
+      <header class="chat-head">
+        <label class="chat-picker"><span class="sr-only">Conversation</span><select id="chatThreadSelect"></select></label>
+        <div><h2 id="chatThreadTitle">Room chat</h2><p id="chatPrivacy" class="hint"></p></div>
+        <span id="chatConnection" class="hint" role="status"></span>
+      </header>
+      <button id="chatOlder" class="text-button" hidden>Load older messages</button>
+      <ol id="chatMessages" class="chat-messages" aria-label="Messages" tabindex="0"></ol>
+      <button id="chatNew" class="text-button" hidden>New messages below ↓</button>
+      <form id="chatForm" class="chat-composer">
+        <div id="chatReply" class="reply-chip" hidden><span id="chatReplyText"></span><button type="button" id="chatReplyCancel" class="icon-button" aria-label="Cancel reply"><span data-icon="close"></span></button></div>
+        <label for="chatBody" class="sr-only">Your message</label>
+        <textarea id="chatBody" maxlength="1000" rows="2" placeholder="What is your word worth?" enterkeyhint="send"></textarea>
+        <div class="chat-compose-row"><span id="chatCount" class="hint">0 / 1000</span><button id="chatSend" class="primary" type="submit">Send</button></div>
+      </form>
+      <div class="chat-delivery"><p id="chatFeedback" class="feedback" role="status" aria-live="polite"></p><button id="chatRetry" hidden>Retry the same message</button><button id="chatReconnect" class="text-button" hidden>Reconnect chat</button></div>
+      <details class="chat-details"><summary>Chat privacy, limits and retention</summary>
+        <p class="hint">Direct messages are visible only to their two participants inside the app. They are <strong>not end-to-end encrypted</strong>: database administrators can access stored messages. The host cannot read other people’s direct messages and cannot mute anyone. Chat is not the official record — only Dispatch confirms that an action happened. Text only; 1000 characters; one message per second and 20 per minute. Messages cannot be edited or withdrawn. When a game finishes, its chat is deleted 24 hours later (sooner if the host deletes the finished room). Anything already seen, screenshotted or copied elsewhere cannot be erased.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- RULES & COUNCIL -->
+<section id="view-council" class="view" hidden>
+  <div class="page-title"><h1>Rules &amp; Council</h1><p id="rulesVersionLine" class="hint"></p></div>
+  <div class="columns">
+    <article class="card"><h2>Rules in force</h2><dl id="rulesSummary" class="rules"></dl>
+      <details><summary>How the game works</summary><div class="prose">
+        <p>The host is a referee, not a player. Every player starts with three hearts on a unique random square. The field opens at the next Pacific midnight; each living player then receives income at every midnight. Unspent points accumulate.</p>
+        <p>Range is Manhattan distance (squares across plus squares up or down), so diagonal and L-shaped targets count when they are within range. Range is for attacks and transfers, not for movement.</p>
+        <p>Confirming an action is your declaration. Only a server-accepted action changes the game; a rejected or interrupted request costs nothing. Attacks, transfers, shields and other players’ resources are private. Movement, eliminations and rule changes are public in Dispatch.</p>
+        <p>Eliminated players keep chat and may vote for a living player; a strict majority of ballots cast awards a bonus at midnight. Ballots are private.</p>
+        <p>The referee sees every resource and a private action log, and must not reveal them.</p>
+      </div></details>
+    </article>
+    <article class="card"><h2>Rule history</h2><p class="hint">Every approved change, newest first. “Host-enforced” rules are written agreements the referee upholds; the game engine does not apply them.</p><div id="ruleHistory"></div></article>
+    <article class="card" id="proposalCard"><h2 id="proposalHeading">Propose a change</h2>
+      <form id="proposalForm">
+        <p class="hint"><span id="proposalPrice"></span> points, charged only if the host approves. Nothing is reserved; only you and the host see a pending or rejected proposal.</p>
+        <label for="proposalKind">What changes?</label>
+        <select id="proposalKind"><option value="house_rule">A written change · the host decides how to apply it</option><option value="all_hearts">Every survivor gains one heart</option><option value="last_survivors">Last N survivors share victory</option></select>
+        <div id="survivorField" hidden><label for="survivorCount">Survivors who share victory</label><input id="survivorCount" type="number" min="1" max="20" value="2" inputmode="numeric"></div>
+        <label for="proposalTitle">Title</label><input id="proposalTitle" maxlength="80" required>
+        <label for="proposalBody">Details</label><textarea id="proposalBody" rows="3" maxlength="1000" required></textarea>
+        <button id="submitProposal" class="primary" type="submit">Send to the host</button>
+        <p id="proposalReason" class="hint"></p>
+      </form>
+      <p id="proposalFeedback" class="feedback" role="status" aria-live="polite"></p>
+      <div id="proposalList"></div>
+    </article>
+  </div>
+</section>
+
+<!-- PLAYERS -->
+<section id="view-players" class="view" hidden>
+  <div class="page-title"><h1>Players</h1><p id="playersPrivacy" class="hint"></p></div>
+  <div id="playerList" class="player-list"></div>
+</section>
+
+<!-- DISPATCH -->
+<section id="view-dispatch" class="view" hidden>
+  <div class="page-title"><h1>Official Dispatch</h1><p class="hint">The public record: movement, eliminations, rule changes and results. Private actions never appear here.</p></div>
+  <ol id="dispatchList" class="dispatch-list"></ol>
+</section>
+
+<!-- SETTINGS -->
+<section id="view-settings" class="view" hidden>
+  <div class="page-title"><h1>Settings</h1></div>
+  <div class="columns">
+    <article class="card"><h2>Account</h2><p id="accountStatus"></p>
+      <form id="displayForm" hidden><label for="displayName">Default display name</label><div class="inline"><input id="displayName" maxlength="24" required><button type="submit">Save</button></div></form>
+      <form id="roomNameForm" hidden><label for="roomName">Name in this room <span class="hint">· can change until the game is scheduled</span></label><div class="inline"><input id="roomName" maxlength="24" required><button type="submit">Save</button></div></form>
+      <p id="accountFeedback" class="feedback" role="status" aria-live="polite"></p>
+      <div class="button-row"><button id="leaveRoom" hidden>Switch room · keep my seat</button><button id="signOut" hidden>Sign out</button></div>
+    </article>
+    <article class="card"><h2>Appearance</h2>
+      <div class="pref" role="group" aria-labelledby="prefTheme"><span id="prefTheme">Theme</span><div class="segmented" data-pref="tt-theme"><button value="system">System</button><button value="light">Parchment</button><button value="dark">Midnight ink</button></div></div>
+      <div class="pref" role="group" aria-labelledby="prefAccent"><span id="prefAccent">Accent</span><div class="segmented" data-pref="tt-accent"><button value="ink">Ink</button><button value="ember">Ember</button><button value="moss">Moss</button><button value="plum">Plum</button></div></div>
+      <div class="pref" role="group" aria-labelledby="prefText"><span id="prefText">Text size</span><div class="segmented" data-pref="tt-text"><button value="small">Small</button><button value="normal">Normal</button><button value="large">Large</button></div></div>
+      <div class="pref" role="group" aria-labelledby="prefDensity"><span id="prefDensity">Chat spacing</span><div class="segmented" data-pref="tt-density"><button value="cozy">Comfortable</button><button value="compact">Compact</button></div></div>
+      <div class="pref" role="group" aria-labelledby="prefMotion"><span id="prefMotion">Motion</span><div class="segmented" data-pref="tt-motion"><button value="auto">Follow device</button><button value="reduced">Reduced</button></div></div>
+    </article>
+    <article class="card" id="notifyCard"><h2>Notifications</h2>
+      <p id="notifyStatus"></p>
+      <button id="notifyEnable" class="primary" hidden>Turn on notifications on this device</button>
+      <button id="notifyDisable" hidden>Turn off on this device</button>
+      <fieldset id="notifyPrefs" hidden><legend>Notify me about</legend><div id="notifyList"></div></fieldset>
+      <p class="hint">Alerts show only “You have a new update” — never a message, a sender or your resources. Quiet hours run 10 pm – 8 am Pacific for every category; anything that happens then arrives as one summary afterwards. Delivery time depends on your device and is not guaranteed.</p>
+      <details><summary>iPhone and iPad</summary><p class="hint">Apple only delivers web notifications to apps added to the Home Screen (iOS/iPadOS 16.4 or later). In Safari choose Share → Add to Home Screen, open Turn Tactics from that icon, then turn notifications on here.</p></details>
+      <p id="notifyFeedback" class="feedback" role="status" aria-live="polite"></p>
+    </article>
+    <article class="card" id="iconCard" hidden><h2>Your token</h2><div id="tokenPreview" class="token-preview"></div><p id="iconStatus"></p>
+      <div id="iconPicker"><label for="iconFile">Use your own image instead · PNG or JPG up to 5 MB</label><input id="iconFile" type="file" accept="image/png,image/jpeg">
+        <div id="iconPreviewBox" class="icon-preview" hidden><img id="iconPreview" width="64" height="64" alt="Preview of your image"><button id="saveIcon" class="primary">Lock this image for the game</button></div></div>
+      <p id="iconFeedback" class="feedback" role="status" aria-live="polite"></p>
+    </article>
+    <article class="card" id="recoveryCard" hidden><h2>Recovery code</h2>
+      <p>A private code that can move <strong id="recoveryRole"></strong> to another account if you lose access. Anyone holding it and the room code can take over the role.</p>
+      <button id="makeRecovery">Create or replace my recovery code</button>
+      <div id="recoveryOutput" hidden><label for="privateRecovery">Private code · save it before leaving</label><textarea id="privateRecovery" readonly rows="3" autocomplete="off" spellcheck="false"></textarea>
+        <div class="button-row"><button id="copyRecovery">Copy room + code</button><button id="hideRecovery">Hide</button></div><p class="hint">Never put this code in chat or screenshots. A replacement invalidates the older code.</p></div>
+      <p id="recoveryFeedback" class="feedback" role="status" aria-live="polite"></p>
+    </article>
+    <article class="card" id="withdrawCard" hidden><h2>Withdraw</h2><p>Withdrawing eliminates you permanently. There is no undo. You keep chat and your vote.</p>
+      <button id="withdraw" class="danger">Withdraw from this game</button><p id="withdrawReason" class="hint"></p></article>
+    <article class="card"><h2>About this app</h2><p class="hint">Invite-only: rooms are reachable only with their code. No public matchmaking, no analytics. Turn Tactics needs a connection — an installed copy opens offline but cannot show live state or send actions. <span id="appVersion"></span></p></article>
+  </div>
+</section>
+
+<!-- HOST DESK -->
+<section id="view-desk" class="view" hidden>
+  <div class="page-title"><h1>Host desk</h1><p class="hint">You referee; you do not play. Your resource view and action log are private to this role. You cannot read other people’s direct messages or mute anyone.</p></div>
+  <p id="deskFeedback" class="feedback" role="status" aria-live="polite"></p>
+  <div class="columns">
+    <article class="card" id="roomControls"><h2>Room</h2><p id="deskStatus"></p>
+      <div id="startControls"><div id="legacySize" hidden><label for="boardSize">Board side length</label><input id="boardSize" type="number" min="3" max="24" inputmode="numeric"></div>
+        <p id="startReason" class="hint"></p><button id="start" class="primary"></button>
+        <details><summary>Solo test room</summary><p class="hint">Fills empty seats with stationary placeholders and labels the room as a test permanently. A real player must join first. Placeholders cannot act, vote or chat.</p><button id="fillTest">Fill missing seats for a test</button></details></div>
+      <div id="manualControls" hidden><p class="hint">Test room: you advance the clock by hand.</p><div class="button-row"><button id="closeDay">Close actions</button><button id="nextDay">Advance test day</button></div></div>
+      <div id="migrateWrap" hidden><details><summary>Move this room to the current rules</summary><p id="migrateText" class="hint"></p><button id="migrate">Migrate rules version…</button></details></div>
+      <div id="deleteWrap" hidden><details><summary>Delete this finished room</summary><p class="hint">Permanently removes the room, its chat, proposals, rule history and recovery codes for everyone. Accounts are not affected. This cannot be undone.</p><button id="deleteRoom" class="danger">Delete finished room…</button></details></div>
+    </article>
+
+    <article class="card wide-card" id="rulesDesk"><h2>Rules desk</h2>
+      <p class="hint">Build an amendment from typed effects, preview exactly what it does, then publish it. Effects in one amendment apply together or not at all. Anything the catalog cannot express goes in as a written rule, which is labelled host-enforced.</p>
+      <div id="deskProposal" class="notice" hidden></div>
+      <div id="deskCorrection" class="notice" hidden></div>
+      <label for="amendTitle">Title <span class="hint">· public</span></label><input id="amendTitle" maxlength="80">
+      <label for="amendReason">Reason <span class="hint">· public, required</span></label><textarea id="amendReason" rows="2" maxlength="500"></textarea>
+      <h3>Effects</h3><ol id="effectList" class="effect-list"></ol>
+      <fieldset class="effect-builder"><legend>Add an effect</legend>
+        <label for="effectType">Kind</label>
+        <select id="effectType"><option value="set">Change a setting · future behaviour</option><option value="adjust">Adjust resources · one-time grant or deduction</option><option value="expire_shields">End all active shields</option><option value="written">Written rule · host-enforced</option></select>
+        <div id="effectSet"><label for="effectKey">Setting</label><select id="effectKey"></select><p id="effectKeyNote" class="hint"></p>
+          <label for="effectValue">New value</label><input id="effectValue" type="number" inputmode="numeric"><select id="effectToggle" hidden><option value="true">Enabled</option><option value="false">Disabled</option></select></div>
+        <div id="effectAdjust" hidden><label for="adjustResource">Resource</label><select id="adjustResource"><option value="points">Points</option><option value="hearts">Hearts</option><option value="range">Range</option></select>
+          <label for="adjustDirection">Change</label><div class="inline"><select id="adjustDirection"><option value="1">Gain</option><option value="-1">Lose</option></select><input id="adjustAmount" type="number" min="1" max="50" value="1" inputmode="numeric" aria-label="Amount"></div>
+          <label for="adjustTarget">Who</label><select id="adjustTarget"></select></div>
+        <div id="effectWritten" hidden><label for="writtenText">The rule, in plain words</label><textarea id="writtenText" rows="3" maxlength="500"></textarea><p class="hint">The engine will not enforce this. It is published as a host-enforced agreement.</p></div>
+        <div id="effectWhenWrap"><label for="effectWhen">Takes effect</label><select id="effectWhen"><option value="now">Immediately</option><option value="next_reset">At the next midnight reset</option></select></div>
+        <button id="addEffect" type="button">Add effect</button>
+      </fieldset>
+      <div class="button-row"><button id="previewAmend" class="primary" type="button">Preview</button><button id="clearAmend" type="button">Start over</button></div>
+      <div id="amendPreview" class="preview" hidden aria-live="polite"></div>
+      <button id="publishAmend" class="primary" type="button" hidden></button>
+      <details><summary>What the rules desk will not do</summary><p class="hint">It never backdates income, replays past events, revives players, moves pieces or resizes an occupied board. It cannot open anyone’s messages, change sign-in or recovery protections, mute players, remove chat from eliminated players, reveal private resources, or run code. Published amendments are permanent public history: a correction is a new amendment, not an erasure.</p></details>
+    </article>
+
+    <article class="card"><h2>Proposals to review</h2><div id="reviewList"></div></article>
+    <article class="card"><h2>Private action log</h2><p class="hint">Not visible to players.</p><ol id="hostLog" class="audit-list"></ol></article>
+  </div>
 </section>
 </main>
-<div id="requestStatus" class="request-status" hidden role="status" aria-live="polite"><span id="requestText"></span><button id="retry" hidden>Retry the same request</button><button id="dismissStatus" aria-label="Dismiss notification">×</button></div>
-<dialog id="decisionDialog"><form method="dialog"><p id="dialogEyebrow" class="eyebrow">MAKE IT COUNT</p><h2 id="dialogTitle"></h2><p id="dialogBody"></p><div id="dialogReasonWrap" hidden><label for="dialogReason">Optional note · up to 300 characters</label><textarea id="dialogReason" rows="3" maxlength="300"></textarea></div><p id="dialogCost" class="dialog-cost"></p><div class="dialog-actions"><button value="cancel">Not yet</button><button id="dialogConfirm" value="confirm" class="primary">Confirm</button></div></form></dialog>
-<script type="module" src="./online.js?v=0.8.0"></script>
-</body></html>
+
+<div id="requestStatus" class="toast" hidden role="status" aria-live="polite"><span id="requestText"></span><button id="retry" hidden>Retry the same request</button><button id="dismissStatus" class="icon-button" aria-label="Dismiss"><span data-icon="close"></span></button></div>
+
+<dialog id="decisionDialog" aria-labelledby="dialogTitle">
+  <form method="dialog">
+    <h2 id="dialogTitle"></h2>
+    <p id="dialogBody"></p>
+    <div id="dialogInputWrap" hidden><label for="dialogInput" id="dialogInputLabel"></label><textarea id="dialogInput" rows="2" maxlength="500"></textarea></div>
+    <p id="dialogCost" class="dialog-cost"></p>
+    <div class="dialog-actions"><button value="cancel">Not yet</button><button id="dialogConfirm" value="confirm" class="primary">Confirm</button></div>
+  </form>
+</dialog>
+<script type="module" src="./online.js?v=1.0.0"></script>
+</body>
+</html>

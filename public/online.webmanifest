@@ -1,22 +1,19 @@
 {
   "id": "./online.html",
-  "name": "Turn Tactics Online",
+  "name": "Turn Tactics",
   "short_name": "Turn Tactics",
+  "description": "An invite-only social strategy game for friends.",
   "start_url": "./online.html",
   "scope": "./",
   "display": "standalone",
-  "theme_color": "#152b34",
-  "background_color": "#f1eee5",
+  "orientation": "any",
+  "theme_color": "#12161f",
+  "background_color": "#12161f",
+  "categories": ["games"],
   "icons": [
-    {
-      "src": "./icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "./icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }
